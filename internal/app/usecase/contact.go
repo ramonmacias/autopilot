@@ -29,15 +29,18 @@ func (c *contactUseCase) ShowContact(id string, authToken string) (*model.Contac
 	if err != nil {
 		return nil, err
 	}
-	if contact != nil {
+	if contact == nil {
 		contact, err = c.repo.FindByEmail(id)
 		if err != nil {
 			return nil, err
 		}
 	}
-	if contact != nil {
+	if contact == nil {
 		contact, err = c.httpClient.GetContact(id, authToken)
 		if err != nil {
+			return nil, err
+		}
+		if err = c.repo.Save(contact); err != nil {
 			return nil, err
 		}
 	}

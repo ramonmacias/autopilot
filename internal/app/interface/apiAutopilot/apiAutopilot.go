@@ -3,6 +3,7 @@ package apiAutopilot
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -14,6 +15,15 @@ const (
 	customAutopilotAuthorizationHeader = "autopilotapikey"
 	autopilotBaseContactURL            = "https://api2.autopilothq.com/v1/contact"
 )
+
+type Error struct {
+	StatusCode int
+	Message    string
+}
+
+func (e *Error) Error() string {
+	return fmt.Sprintf("Error from autopìlot API with code: %d and body: %s", e.StatusCode, e.Message)
+}
 
 type ContactResponse struct {
 	Email string `json:"Email"`
@@ -39,15 +49,14 @@ func (a *apiAutopilot) GetContact(id, authToken string) (*model.Contact, error) 
 	request.Header.Set(customAutopilotAuthorizationHeader, authToken)
 
 	resp, err := a.client.Do(request)
-	if err != nil {
-		log.Printf("There is an error while try to send a create contact request to Autopilot API, err : %v", err)
-		return nil, err
+	body, _ := ioutil.ReadAll(resp.Body)
+	if err != nil || resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, &Error{
+			StatusCode: resp.StatusCode,
+			Message:    string(body),
+		}
 	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Printf("Unexpected error: %v", err)
-		return nil, err
-	}
+
 	resp.Body.Close()
 	resp.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 
