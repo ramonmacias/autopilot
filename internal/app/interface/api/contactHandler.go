@@ -113,7 +113,6 @@ func UpdateContact(w http.ResponseWriter, r *http.Request) {
 	response := Response{
 		ContactId: *contactId,
 	}
-	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(&response)
 }
 
