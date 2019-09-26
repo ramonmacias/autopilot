@@ -76,3 +76,7 @@ func redisClient() (client *redis.Client) {
 	}
 	return client
 }
+
+func GetClient() *redis.Client {
+	return redisConfig().client
+}

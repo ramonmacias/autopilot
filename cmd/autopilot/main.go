@@ -19,6 +19,7 @@ func main() {
 	flag.Parse()
 
 	redis.Start()
+	log.Printf("Redis client: %+v", redis.GetClient())
 	r := api.BuildRouter()
 
 	srv := &http.Server{
