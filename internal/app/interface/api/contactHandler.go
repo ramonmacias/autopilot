@@ -23,10 +23,15 @@ type ContactInfoRequest struct {
 	Email string `json:"Email"`
 }
 
+type Response struct {
+	ContactId string `json:"contact_id"`
+}
+
 var (
-	client            http.Client
-	contactRepository repository.ContactRepository
-	contactUseCase    usecase.ContactUseCase
+	client                   http.Client
+	contactRepository        repository.ContactRepository
+	contactUseCase           usecase.ContactUseCase
+	unauthorizedErrorMessage = `{"error": "Bad Request", "message": "No autopilotapikey header, or apikey query parameter provided."}`
 )
 
 const (
@@ -45,8 +50,14 @@ func init() {
 }
 
 func ShowContact(w http.ResponseWriter, r *http.Request) {
-	contact, err := contactUseCase.ShowContact(mux.Vars(r)["id"], r.Header.Get(customAutopilotAuthorizationHeader))
 	w.Header().Set("Content-Type", "application/json")
+	authToken := r.Header.Get(customAutopilotAuthorizationHeader)
+	if authToken == "" {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(unauthorizedErrorMessage))
+		return
+	}
+	contact, err := contactUseCase.ShowContact(mux.Vars(r)["id"], authToken)
 	if err != nil {
 		switch err.(type) {
 		case *apiAutopilot.Error:
@@ -64,6 +75,13 @@ func ShowContact(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateContact(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	authToken := r.Header.Get(customAutopilotAuthorizationHeader)
+	if authToken == "" {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(unauthorizedErrorMessage))
+		return
+	}
 	requestBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("Error reading body request, err: %v", err)
@@ -75,9 +93,9 @@ func UpdateContact(w http.ResponseWriter, r *http.Request) {
 	requestInfo := &ContactRequest{}
 	json.Unmarshal(requestBody, requestInfo)
 
-	err = contactUseCase.UpdateContact(
+	contactId, err := contactUseCase.UpdateContact(
 		model.NewContact("", requestInfo.ContactInfo.Email, string(requestBody)),
-		r.Header.Get(customAutopilotAuthorizationHeader),
+		authToken,
 	)
 	if err != nil {
 		switch err.(type) {
@@ -92,9 +110,22 @@ func UpdateContact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+	response := Response{
+		ContactId: *contactId,
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(&response)
 }
 
 func CreateContact(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	authToken := r.Header.Get(customAutopilotAuthorizationHeader)
+	if authToken == "" {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(unauthorizedErrorMessage))
+		return
+	}
+
 	requestBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("Error reading body request, err: %v", err)
@@ -106,9 +137,9 @@ func CreateContact(w http.ResponseWriter, r *http.Request) {
 	requestInfo := &ContactRequest{}
 	json.Unmarshal(requestBody, requestInfo)
 
-	err = contactUseCase.CreateContact(
+	contactId, err := contactUseCase.CreateContact(
 		model.NewContact("", requestInfo.ContactInfo.Email, string(requestBody)),
-		r.Header.Get(customAutopilotAuthorizationHeader),
+		authToken,
 	)
 	if err != nil {
 		switch err.(type) {
@@ -122,5 +153,9 @@ func CreateContact(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	response := Response{
+		ContactId: *contactId,
+	}
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(&response)
 }

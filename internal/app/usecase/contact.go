@@ -8,8 +8,8 @@ import (
 
 type ContactUseCase interface {
 	ShowContact(id, authToken string) (*model.Contact, error)
-	CreateContact(contact *model.Contact, authToken string) error
-	UpdateContact(contact *model.Contact, authToken string) error
+	CreateContact(contact *model.Contact, authToken string) (*string, error)
+	UpdateContact(contact *model.Contact, authToken string) (*string, error)
 }
 
 type contactUseCase struct {
@@ -47,20 +47,20 @@ func (c *contactUseCase) ShowContact(id string, authToken string) (*model.Contac
 	return contact, nil
 }
 
-func (c *contactUseCase) CreateContact(contact *model.Contact, authToken string) error {
+func (c *contactUseCase) CreateContact(contact *model.Contact, authToken string) (*string, error) {
 	id, err := c.httpClient.CreateContact(contact, authToken)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	contact.Id = *id
-	return c.repo.Delete(contact)
+	return id, c.repo.Delete(contact)
 }
 
-func (c *contactUseCase) UpdateContact(contact *model.Contact, authToken string) error {
+func (c *contactUseCase) UpdateContact(contact *model.Contact, authToken string) (*string, error) {
 	id, err := c.httpClient.UpdateContact(contact, authToken)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	contact.Id = *id
-	return c.repo.Delete(contact)
+	return id, c.repo.Delete(contact)
 }
