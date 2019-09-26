@@ -21,7 +21,11 @@ func (r contactController) FindByID(id string) (*model.Contact, error) {
 
 	data, err := r.redisClient.Get(id).Result()
 	if err != nil {
-		return nil, err
+		if err == redis.Nil {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 	return &model.Contact{
 		Id:   id,

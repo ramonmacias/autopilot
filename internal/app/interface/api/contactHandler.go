@@ -42,6 +42,7 @@ func ShowContact(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Error retrieving a contact, err: %v", err)
 		w.WriteHeader(http.StatusBadGateway)
+		return
 	}
 	if contact != nil {
 		log.Println("FOUND IN CACHE!")
@@ -53,6 +54,7 @@ func ShowContact(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Printf("There is an error while try to create a request for create contact, err: %v", err)
 			w.WriteHeader(http.StatusBadGateway)
+			return
 		}
 		request.Header.Set(customAutopilotAuthorizationHeader, r.Header.Get(customAutopilotAuthorizationHeader))
 
@@ -60,10 +62,13 @@ func ShowContact(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Printf("There is an error while try to send a create contact request to Autopilot API, err : %v", err)
 			w.WriteHeader(http.StatusBadGateway)
+			return
 		}
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			log.Printf("Unexpected error: %v", err)
+			w.WriteHeader(http.StatusBadGateway)
+			return
 		}
 		resp.Body.Close()
 		resp.Body = ioutil.NopCloser(bytes.NewBuffer(body))
@@ -75,6 +80,7 @@ func ShowContact(w http.ResponseWriter, r *http.Request) {
 		if err = contactRepository.Save(model.NewContact(contactResponse.Id, contactResponse.Email, string(body))); err != nil {
 			log.Printf("Error saving the contact into the cache, err: %v", err)
 			w.WriteHeader(http.StatusBadGateway)
+			return
 		}
 
 		w.Header().Set("Content-Type", "application/json")
@@ -84,10 +90,21 @@ func ShowContact(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateContact(w http.ResponseWriter, r *http.Request) {
+	requestBody, _ := ioutil.ReadAll(r.Body)
+	r.Body.Close()
+
+	contactRepository = redis.NewContactController(redis.GetClient())
+	contactResponse := &ContactResponse{}
+	json.NewDecoder(r.Body).Decode(contactResponse)
+	log.Printf("Contact response: %v", contactResponse)
+
+	r.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
+
 	request, err := http.NewRequest("POST", autopilotBaseContactURL, r.Body)
 	if err != nil {
 		log.Printf("There is an error while try to create a request for create contact, err: %v", err)
 		w.WriteHeader(http.StatusBadGateway)
+		return
 	}
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set(customAutopilotAuthorizationHeader, r.Header.Get(customAutopilotAuthorizationHeader))
@@ -96,12 +113,21 @@ func UpdateContact(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("There is an error while try to send a create contact request to Autopilot API, err : %v", err)
 		w.WriteHeader(http.StatusBadGateway)
+		return
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("Unexpected error: %v", err)
+		w.WriteHeader(http.StatusBadGateway)
+		return
+	}
+
+	if err := contactRepository.Delete(model.NewContact(contactResponse.Id, contactResponse.Email, "")); err != nil {
+		log.Printf("Error while try to remove data from cache: %v", err)
+		w.WriteHeader(http.StatusBadGateway)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -110,11 +136,21 @@ func UpdateContact(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateContact(w http.ResponseWriter, r *http.Request) {
+	requestBody, _ := ioutil.ReadAll(r.Body)
+	r.Body.Close()
+
+	contactRepository = redis.NewContactController(redis.GetClient())
+	contactResponse := &ContactResponse{}
+	json.NewDecoder(r.Body).Decode(contactResponse)
+	log.Printf("Contact response: %v", contactResponse)
+
+	r.Body = ioutil.NopCloser(bytes.NewBuffer(requestBody))
 
 	request, err := http.NewRequest("POST", autopilotBaseContactURL, r.Body)
 	if err != nil {
 		log.Printf("There is an error while try to create a request for create contact, err: %v", err)
 		w.WriteHeader(http.StatusBadGateway)
+		return
 	}
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set(customAutopilotAuthorizationHeader, r.Header.Get(customAutopilotAuthorizationHeader))
@@ -123,12 +159,21 @@ func CreateContact(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("There is an error while try to send a create contact request to Autopilot API, err : %v", err)
 		w.WriteHeader(http.StatusBadGateway)
+		return
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("Unexpected error: %v", err)
+		w.WriteHeader(http.StatusBadGateway)
+		return
+	}
+
+	if err := contactRepository.Delete(model.NewContact(contactResponse.Id, contactResponse.Email, "")); err != nil {
+		log.Printf("Error while try to remove data from cache: %v", err)
+		w.WriteHeader(http.StatusBadGateway)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
