@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ramonmacias/autopilot/internal/app/interface/api"
+	"github.com/ramonmacias/autopilot/internal/app/interface/persistance/redis"
 )
 
 func main() {
@@ -17,6 +18,7 @@ func main() {
 	flag.DurationVar(&wait, "graceful-timeout", time.Second*15, "the duration for which the server gracefully wait for existing connections to finish")
 	flag.Parse()
 
+	redis.Start()
 	r := api.BuildRouter()
 
 	srv := &http.Server{
