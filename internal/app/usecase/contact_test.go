@@ -55,12 +55,12 @@ func (c *ExternalTestApiService) GetContact(id, authToken string) (*model.Contac
 	}, nil
 }
 
-func (c *ExternalTestApiService) CreateContact(contact *model.Contact, authToken string) error {
-	return nil
+func (c *ExternalTestApiService) CreateContact(contact *model.Contact, authToken string) (*string, error) {
+	return &contact.Id, nil
 }
 
-func (c *ExternalTestApiService) UpdateContact(contact *model.Contact, authToken string) error {
-	return nil
+func (c *ExternalTestApiService) UpdateContact(contact *model.Contact, authToken string) (*string, error) {
+	return &contact.Id, nil
 }
 
 func TestGetFromExternalAPI(t *testing.T) {

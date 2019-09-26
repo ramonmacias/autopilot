@@ -48,15 +48,19 @@ func (c *contactUseCase) ShowContact(id string, authToken string) (*model.Contac
 }
 
 func (c *contactUseCase) CreateContact(contact *model.Contact, authToken string) error {
-	if err := c.httpClient.CreateContact(contact, authToken); err != nil {
+	id, err := c.httpClient.CreateContact(contact, authToken)
+	if err != nil {
 		return err
 	}
+	contact.Id = *id
 	return c.repo.Delete(contact)
 }
 
 func (c *contactUseCase) UpdateContact(contact *model.Contact, authToken string) error {
-	if err := c.httpClient.UpdateContact(contact, authToken); err != nil {
+	id, err := c.httpClient.UpdateContact(contact, authToken)
+	if err != nil {
 		return err
 	}
+	contact.Id = *id
 	return c.repo.Delete(contact)
 }

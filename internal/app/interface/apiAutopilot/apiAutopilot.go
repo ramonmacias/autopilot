@@ -70,48 +70,60 @@ func (a *apiAutopilot) GetContact(id, authToken string) (*model.Contact, error) 
 	}, nil
 }
 
-func (a *apiAutopilot) CreateContact(contact *model.Contact, authToken string) error {
+func (a *apiAutopilot) CreateContact(contact *model.Contact, authToken string) (*string, error) {
 	requestBody, err := json.Marshal(contact.Data)
 	if err != nil {
 		log.Printf("Error marshalling json, err: %v", err)
-		return err
+		return nil, err
 	}
 
 	request, err := http.NewRequest("POST", autopilotBaseContactURL, bytes.NewBuffer(requestBody))
 	if err != nil {
 		log.Printf("There is an error while try to create a request for create contact, err: %v", err)
-		return err
+		return nil, err
 	}
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set(customAutopilotAuthorizationHeader, authToken)
 
-	_, err = a.client.Do(request)
-	if err != nil {
-		log.Printf("There is an error while try to send a create contact request to Autopilot API, err : %v", err)
-		return err
+	resp, err := a.client.Do(request)
+	body, _ := ioutil.ReadAll(resp.Body)
+	if err != nil || resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, &Error{
+			StatusCode: resp.StatusCode,
+			Message:    string(body),
+		}
 	}
-	return nil
+
+	response := &ContactResponse{}
+	json.Unmarshal(body, response)
+	return &response.Id, nil
 }
 
-func (a *apiAutopilot) UpdateContact(contact *model.Contact, authToken string) error {
+func (a *apiAutopilot) UpdateContact(contact *model.Contact, authToken string) (*string, error) {
 	requestBody, err := json.Marshal(contact.Data)
 	if err != nil {
 		log.Printf("Error marshalling json, err: %v", err)
-		return err
+		return nil, err
 	}
 
 	request, err := http.NewRequest("POST", autopilotBaseContactURL, bytes.NewBuffer(requestBody))
 	if err != nil {
 		log.Printf("There is an error while try to create a request for create contact, err: %v", err)
-		return err
+		return nil, err
 	}
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set(customAutopilotAuthorizationHeader, authToken)
 
-	_, err = a.client.Do(request)
-	if err != nil {
-		log.Printf("There is an error while try to send a create contact request to Autopilot API, err : %v", err)
-		return err
+	resp, err := a.client.Do(request)
+	body, _ := ioutil.ReadAll(resp.Body)
+	if err != nil || resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, &Error{
+			StatusCode: resp.StatusCode,
+			Message:    string(body),
+		}
 	}
-	return nil
+
+	response := &ContactResponse{}
+	json.Unmarshal(body, response)
+	return &response.Id, nil
 }

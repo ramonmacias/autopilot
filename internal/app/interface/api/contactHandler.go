@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -14,9 +15,12 @@ import (
 	"github.com/ramonmacias/autopilot/internal/app/usecase"
 )
 
-type ContactResponse struct {
+type ContactRequest struct {
+	ContactInfo ContactInfoRequest `json:"contact"`
+}
+
+type ContactInfoRequest struct {
 	Email string `json:"Email"`
-	Id    string `json:"contact_id"`
 }
 
 var (
@@ -67,13 +71,24 @@ func UpdateContact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
+
+	requestInfo := &ContactRequest{}
+	json.Unmarshal(requestBody, requestInfo)
+
 	err = contactUseCase.UpdateContact(
-		model.NewContact("", "", string(requestBody)),
+		model.NewContact("", requestInfo.ContactInfo.Email, string(requestBody)),
 		r.Header.Get(customAutopilotAuthorizationHeader),
 	)
 	if err != nil {
-		log.Printf("Error updating contact: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		switch err.(type) {
+		case *apiAutopilot.Error:
+			apiError := err.(*apiAutopilot.Error)
+			w.WriteHeader(apiError.StatusCode)
+			w.Write([]byte(apiError.Message))
+		default:
+			log.Printf("Unexpected error updating contact: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -87,13 +102,24 @@ func CreateContact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
+
+	requestInfo := &ContactRequest{}
+	json.Unmarshal(requestBody, requestInfo)
+
 	err = contactUseCase.CreateContact(
-		model.NewContact("", "", string(requestBody)),
+		model.NewContact("", requestInfo.ContactInfo.Email, string(requestBody)),
 		r.Header.Get(customAutopilotAuthorizationHeader),
 	)
 	if err != nil {
-		log.Printf("Error updating contact: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		switch err.(type) {
+		case *apiAutopilot.Error:
+			apiError := err.(*apiAutopilot.Error)
+			w.WriteHeader(apiError.StatusCode)
+			w.Write([]byte(apiError.Message))
+		default:
+			log.Printf("Unexpected error creating contact: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		return
 	}
 	w.WriteHeader(http.StatusOK)
