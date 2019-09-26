@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/ramonmacias/autopilot/internal/app/interface/api"
-	"github.com/ramonmacias/autopilot/internal/app/interface/persistance/redis"
+	"github.com/ramonmacias/autopilot/internal/app/interface/persistence/redis"
 )
 
 func main() {

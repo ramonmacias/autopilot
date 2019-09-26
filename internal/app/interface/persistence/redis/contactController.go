@@ -36,7 +36,11 @@ func (r contactController) FindByID(id string) (*model.Contact, error) {
 func (r contactController) FindByEmail(email string) (*model.Contact, error) {
 	data, err := r.redisClient.Get(email).Result()
 	if err != nil {
-		return nil, err
+		if err == redis.Nil {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 	return &model.Contact{
 		Email: email,
