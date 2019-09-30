@@ -8,6 +8,7 @@ This is the repository where I save all related with my technical test for Autop
 <li>For this project we used Redis for cache contact information from Autopilot API, so the first step will be to install a Redis in your
 local environment, you can look how to install redis in https://redis.io , in order to configure all related with the redis you can modify the json file inside the directory /config named redis.json</li>
 <li>I used go modules as dependency manager, I used the version go1.13. Make sure you clone the projecte under your go workspace following the directory inside src like this /github.com/ramonmacias</li>
+  <li>I have a json file located in /config/autopilot_client.json, inside this file you will see a few of fields to configure the timeout for the client that connects to autopilot API and also the base url from autopilot</li>
 <li>As soon as you clone the project into you local environment and start the redis server you can go to the directory /cmd/autopilot/ and use go run main.go</li>
 <li>After start the API you can start testing the app on http://localhost:8080</li>
 </ul>
