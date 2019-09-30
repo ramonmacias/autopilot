@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/ramonmacias/autopilot/internal/app/domain/model"
@@ -39,10 +38,6 @@ const (
 )
 
 func init() {
-	timeout := time.Duration(5 * time.Second)
-	client = http.Client{
-		Timeout: timeout,
-	}
 	contactUseCase = usecase.NewContactUseCase(
 		redis.NewContactController(redis.GetClient()),
 		apiAutopilot.NewApiAutopilot(),
