@@ -1,0 +1,4 @@
+{
+  "base_url": "https://api2.autopilothq.com/v1",
+  "time_out_seconds": 5
+}

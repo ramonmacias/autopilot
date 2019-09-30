@@ -45,7 +45,7 @@ func init() {
 	}
 	contactUseCase = usecase.NewContactUseCase(
 		redis.NewContactController(redis.GetClient()),
-		apiAutopilot.NewApiAutopilot(client),
+		apiAutopilot.NewApiAutopilot(),
 	)
 }
 
