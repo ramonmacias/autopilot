@@ -28,8 +28,14 @@ All the information about fields and formats related with the body requests you 
 All this request must have the custom authorization header named **autopilotapikey**
 
 
-# Code Insisghts
+# Code Insights
 
-I made all this API following the Clean Architecture (more information https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html), thanks to this I can test the most important part for this project, that is the switch between get contact information from the cache or from the API and also the management of cache invalidation, you can find this test inside the directory named /internal/app/usecase 
+I made all this API following the Clean Architecture (more information https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html), following this architecture we can see that there are some differents layers. In the most inner layer we can find the entities, on my case you cand find this layer on **internal/app/domain** , you will see there three different packages, the first one is **model** package where we will find only one model named contact and his definition, then in the second package named **repository** we will find and interface that should be implemented for more outter layers (in our case will be a redis implementation), the third package named **service** is where we can find the declaration of the interface for, in our case, the methods that an external API should implement, having this layer we defined the enterprise business rules.
 
-Just mention that for a more production ready version, we are going to need to test also the connection and management with redis and also a test end to end.
+You will find the second layer named usecase on **internal/app/usecase** , inside this package you will find a file named contact.go that has the definition about the contact usecase, also is important to mention that this usecase will need an implementation of contact repository (Redis) and implementation of external API service (Client to connect to Autopilot API), so probably this is the most important part of the project to test because this usecase determine the most important flow, in our case, the switch between get the information from a cache or get the information from the external API and the invalidation of this cache when we update or create a new contact. Using this architecture and the use of interfaces, will give us the chance to test this essential part of the code without the need of have a real connection with an external API or without having a redis running.
+
+The third layer related with clean architecture named interface layer, cand be found on **internal/app/interface/api** , here is the implementation of this layer using handlers, the main goal of this layer is to be able to manage the data and convert it in the best way for the usecases and also for all the external agencys such as databases or webs, in our case the best format for the contact usecase and also the json format for the client that is querying our service.
+
+The most outter layer in clean architecture frameworks and drivers can be found on **internal/app/interface/apiAutopilot** and **internal/app/interface/persistence** here is where we put all the details related more with the infrastructure in our case a redis and the external Autopilot API.
+
+Just mention that for a more production ready version, we are going to need to test also the connection and management with redis, also a set of test cases to test the Autopilot API and finally and end to end test.
