@@ -10,6 +10,7 @@ import (
 	"github.com/ramonmacias/autopilot/internal/app/domain/model"
 	"github.com/ramonmacias/autopilot/internal/app/domain/repository"
 	"github.com/ramonmacias/autopilot/internal/app/interface/apiAutopilot"
+	"github.com/ramonmacias/autopilot/internal/app/interface/apiAutopilot/contact"
 	"github.com/ramonmacias/autopilot/internal/app/interface/persistence/redis"
 	"github.com/ramonmacias/autopilot/internal/app/usecase"
 )
@@ -40,7 +41,7 @@ const (
 func init() {
 	contactUseCase = usecase.NewContactUseCase(
 		redis.NewContactController(redis.GetClient()),
-		apiAutopilot.NewApiAutopilot(),
+		contact.NewContactAPI(),
 	)
 }
 

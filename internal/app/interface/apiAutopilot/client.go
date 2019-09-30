@@ -2,6 +2,7 @@ package apiAutopilot
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -19,6 +20,21 @@ var (
 const (
 	customAutopilotAuthorizationHeader = "autopilotapikey"
 )
+
+type Error struct {
+	StatusCode int
+	Message    string
+}
+
+func (e *Error) Error() string {
+	return fmt.Sprintf("Error from autopìlot API with code: %d and body: %s", e.StatusCode, e.Message)
+}
+
+type ContactResponse struct {
+	Email string `json:"Email"`
+	Id    string `json:"contact_id"`
+	Body  []byte `json:"-"`
+}
 
 type configuration struct {
 	client  http.Client
