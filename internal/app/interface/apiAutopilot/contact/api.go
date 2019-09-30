@@ -14,14 +14,18 @@ const (
 	autopilotBaseContactURL = "/contact"
 )
 
-type contactApi struct{}
+type contactApi struct {
+	client apiAutopilot.APIClientable
+}
 
-func NewContactAPI() *contactApi {
-	return &contactApi{}
+func NewContactAPI(client apiAutopilot.APIClientable) *contactApi {
+	return &contactApi{
+		client: client,
+	}
 }
 
 func (a *contactApi) GetContact(id, authToken string) (*model.Contact, error) {
-	contactResponse, err := apiAutopilot.SendRequest("GET", fmt.Sprintf("%s%s/%s", apiAutopilot.GetBaseUrl(), autopilotBaseContactURL, id), authToken, nil)
+	contactResponse, err := a.client.SendRequest("GET", fmt.Sprintf("%s%s/%s", a.client.GetBaseUrl(), autopilotBaseContactURL, id), authToken, nil)
 	if err != nil {
 		log.Printf("Error sending GET request for get contact information, err: %v", err)
 		return nil, err
@@ -41,7 +45,7 @@ func (a *contactApi) CreateContact(contact *model.Contact, authToken string) (*s
 		return nil, err
 	}
 
-	contactResponse, err := apiAutopilot.SendRequest("POST", fmt.Sprintf("%s%s", apiAutopilot.GetBaseUrl(), autopilotBaseContactURL), authToken, bytes.NewBuffer(requestBody))
+	contactResponse, err := a.client.SendRequest("POST", fmt.Sprintf("%s%s", a.client.GetBaseUrl(), autopilotBaseContactURL), authToken, bytes.NewBuffer(requestBody))
 	if err != nil {
 		log.Printf("Error sending GET request for get contact information, err: %v", err)
 		return nil, err
@@ -57,7 +61,7 @@ func (a *contactApi) UpdateContact(contact *model.Contact, authToken string) (*s
 		return nil, err
 	}
 
-	contactResponse, err := apiAutopilot.SendRequest("POST", fmt.Sprintf("%s%s", apiAutopilot.GetBaseUrl(), autopilotBaseContactURL), authToken, bytes.NewBuffer(requestBody))
+	contactResponse, err := a.client.SendRequest("POST", fmt.Sprintf("%s%s", a.client.GetBaseUrl(), autopilotBaseContactURL), authToken, bytes.NewBuffer(requestBody))
 	if err != nil {
 		log.Printf("Error sending GET request for get contact information, err: %v", err)
 		return nil, err

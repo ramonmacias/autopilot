@@ -21,6 +21,12 @@ const (
 	customAutopilotAuthorizationHeader = "autopilotapikey"
 )
 
+type APIClientable interface {
+	GetClient() *http.Client
+	GetBaseUrl() string
+	SendRequest(method, url, authToken string, body io.Reader) (*ContactResponse, error)
+}
+
 type Error struct {
 	StatusCode int
 	Message    string
@@ -44,6 +50,10 @@ type configuration struct {
 type configInfo struct {
 	BaseUrl string `json:"base_url"`
 	TimeOut int    `json:"time_out_seconds"`
+}
+
+func NewApiClient() *configuration {
+	return autopilotConfig()
 }
 
 func autopilotConfig() *configuration {
@@ -76,15 +86,15 @@ func setupConfig() *configuration {
 	}
 }
 
-func GetClient() *http.Client {
-	return &autopilotConfig().client
+func (c *configuration) GetClient() *http.Client {
+	return &c.client
 }
 
-func GetBaseUrl() string {
-	return autopilotConfig().baseUrl
+func (c *configuration) GetBaseUrl() string {
+	return c.baseUrl
 }
 
-func SendRequest(method, url, authToken string, body io.Reader) (*ContactResponse, error) {
+func (c *configuration) SendRequest(method, url, authToken string, body io.Reader) (*ContactResponse, error) {
 	request, err := http.NewRequest(method, url, body)
 	if err != nil {
 		log.Printf("There is an error while try to create a request for create contact, err: %v", err)
@@ -93,7 +103,7 @@ func SendRequest(method, url, authToken string, body io.Reader) (*ContactRespons
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set(customAutopilotAuthorizationHeader, authToken)
 
-	resp, err := GetClient().Do(request)
+	resp, err := c.client.Do(request)
 	responseBody, _ := ioutil.ReadAll(resp.Body)
 	if err != nil || resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return nil, &Error{
