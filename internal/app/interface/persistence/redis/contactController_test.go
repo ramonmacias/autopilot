@@ -50,3 +50,46 @@ func TestFindByID(t *testing.T) {
 		t.Errorf("Expected test_data but got %s", contact.Data)
 	}
 }
+
+func TestFindByEmail(t *testing.T) {
+	if err := client.FlushAll().Err(); err != nil {
+		t.Errorf("There is an error with your test redis server: %v", err)
+	}
+	contactController := NewContactController(client)
+	contact, err := contactController.FindByEmail("test@test.com")
+	if err != nil || contact != nil {
+		t.Error("When a key doesn't exists we need to return nil in both results but got some of them not nil")
+	}
+
+	contactController.Save(model.NewContact("test_id", "test@test.com", "test_data"))
+
+	contact, err = contactController.FindByEmail("test@test.com")
+	if err != nil {
+		t.Errorf("Expect not error but got %v", err)
+	}
+	if contact == nil {
+		t.Error("Expected contact object not nil")
+	}
+	if contact.Email != "test@test.com" {
+		t.Errorf("Expected email test@test.com but got %s", contact.Email)
+	}
+	if contact.Data != "test_data" {
+		t.Errorf("Expected test_data but got %s", contact.Data)
+	}
+}
+
+func TestSaveAndDeleteMethods(t *testing.T) {
+	if err := client.FlushAll().Err(); err != nil {
+		t.Errorf("There is an error with your test redis server: %v", err)
+	}
+	contactController := NewContactController(client)
+
+	contact, err := contactController.FindByEmail("test@test.com")
+	if err != nil || contact != nil {
+		t.Error("When a key doesn't exists we need to return nil in both results but got some of them not nil")
+	}
+
+	if err := contactController.Save(model.NewContact("test_id", "test@test.com", "test_data")); err != nil {
+		t.Errorf("Expected no error while save but got %v", err)
+	}
+}
